@@ -57,7 +57,15 @@ export interface Dispatch extends Function {
 
 // A function of the Store that exposes its methods to the supplied AsyncAction function.
 export interface DispatchAsync<T> extends Function {
-  (action: AsyncAction<T>): PromiseLike<T> | void;
+  (action: AsyncAction<T>): PromiseLike<T>;
+}
+
+export interface MakeAsyncAction<T, F>{
+  (x: F): AsyncAction<T>;
+}
+
+export interface DispatchAsync2<T> extends Function {
+  <F>(store: Store<T>, ...rest: any[]): PromiseLike<T>
 }
 
 // A function of the Store that gets the current state of the store.
@@ -82,13 +90,8 @@ export interface Store<T> {
   dispatchAsync: DispatchAsync<T>;
 }
 
-interface State {
-  readonly id: string;
-}
-
 // Creates the store by accepting a top level reducer that will handle and delegate all actions to sub reducers.
-export function createStore<T extends State>(reducer: Reducer<T>): Store<T> {
-  logger.debug('Creating the store.');
+export function createStore<T>(reducer: Reducer<T>): Store<T> {
 
   // call the reducer without state to trigger an initial state.
   let currentState: Readonly<T> = reducer(undefined, {type: ''});
@@ -125,12 +128,13 @@ export function createStore<T extends State>(reducer: Reducer<T>): Store<T> {
   }
 
   function dispatch(action: Action): void {
-    logger.debug(`Action => ${currentState.id}:${action.type}`);
+    logger.debug(`Action => ${action.type}`);
     dispatcher.next(action);
   }
 
   function dispatchAsync(asyncAction: AsyncAction<T>): PromiseLike<T> {
-    logger.debug(`AsyncAction => ${currentState.id}:${asyncAction.name}`);
+    logger.debug(`AsyncAction => ${asyncAction.name}`);
     return asyncAction({getState, subscribe, dispatch, dispatchAsync});
   }
+
 }

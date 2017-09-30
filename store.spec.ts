@@ -1,4 +1,4 @@
-import {createStore, Store, Action} from './store';
+import {createStore, Store, Action, AsyncAction} from './store';
 import * as chai from 'chai';
 
 chai.should();
@@ -6,22 +6,28 @@ chai.should();
 // Test action creator
 export let increment = () => ({type: 'INCREMENT'});
 
-interface State {
-  readonly id: string;
-  number: number;
+function asyncAction() : AsyncAction<number> {
+  return async function asyncAction({dispatch}: Store<number>): Promise<void> {
+    return new Promise<void>(resolve => {
+       setTimeout(() => {
+        dispatch(increment());
+         resolve();
+      }, 1000)
+    })
+  }
 }
 
 // Test reducer
-function incrementReducer(state: State = {id: 'test', number: 0}, action: Action): State {
+function incrementReducer(state = 0, action: Action): number {
   if (action.type === 'INCREMENT') {
-    return {...state, number: state.number + 1}
+    return state + 1;
   }
   return state;
 }
 
 describe('Store', () => {
 
-  let store: Store<State>;
+  let store: Store<number>;
   beforeEach(() => store = createStore(incrementReducer));
 
   describe('#createStore', () => {
@@ -46,14 +52,21 @@ describe('Store', () => {
     });
 
     describe('#getState', () => {
-      it('Should getState', () => store.getState().number.should.equal(0));
+      it('Should getState', () => store.getState().should.equal(0));
     });
 
     describe('#dispatch', () => {
       it('Should dispatch', () => {
         store.subscribe(() => undefined);
         store.dispatch(increment());
-        store.getState().number.should.equal(1);
+        store.getState().should.equal(1);
+      });
+    });
+
+    describe('#dispatchAsync', () => {
+      it('Should dispatch', () => {
+        store.subscribe(() => undefined);
+        return store.dispatchAsync(asyncAction()).then(() => store.getState().should.equal(1))
       });
     });
 
