@@ -64,9 +64,10 @@ describe('Store', () => {
     });
 
     describe('#dispatchAsync', () => {
-      it('Should dispatch', () => {
+      it('Should dispatch', async () => {
         store.subscribe(() => undefined);
-        return store.dispatchAsync(asyncAction()).then(() => store.getState().should.equal(1))
+        await store.dispatchAsync(asyncAction());
+        return store.getState().should.equal(1);
       });
     });
 

@@ -1,9 +1,6 @@
-import {Subscription} from 'rxjs/Subscription';
-import {Subject} from 'rxjs/Subject';
-import 'rxjs/add/operator/scan';
-import 'rxjs/add/operator/share';
-import {PartialObserver} from 'rxjs/Observer';
-import {Observable} from 'rxjs/Observable';
+import {Subscription, Subject, PartialObserver, Observable} from 'rxjs';
+import {scan, share} from 'rxjs/operators';
+
 import {getLogger} from 'loglevel';
 
 const logger = getLogger('Store');
@@ -30,9 +27,7 @@ export type PayloadMetaAction<P, M> = PayloadAction<P> & MetaAction<M>;
 
 // A function that is dispatched by the store's dispatchAsync method, and provides the store's methods to allow for
 // asynchronous code to execute, to get the current state, or to dispatch actions once asynchronous code returns.
-export interface AsyncAction<T> extends Function {
-  (store: Store<T>): PromiseLike<any>;
-}
+export type AsyncAction<T> = (store: Store<T>) => PromiseLike<any>;
 
 // A type guard to check if an object is a PayloadAction type.
 export function isPayloadAction<P>(type: any): type is PayloadAction<P> {
@@ -46,40 +41,26 @@ export function isMetaAction<M>(type: any): type is MetaAction<M> {
 
 // A function that takes the current state and and action that "reduces" the state to the next state.
 // A readonly context (state object) is passed along that holds all state for sub reducers.
-export interface Reducer<S> extends Function {
-  <P, M>(state: Readonly<S>, action?: Action | PayloadAction<P> | MetaAction<M>, context?: any): S;
-}
+export type Reducer<S> =
+  <P, M>(state: Readonly<S>, action?: Action | PayloadAction<P> | MetaAction<M>, context?: any) => S;
 
 // A function of the Store that dispatches a synchronous action for handling by a reducer.
-export interface Dispatch extends Function {
-  (action: Action): void;
-}
+export type Dispatch = (action: Action) => void;
 
 // A function of the Store that exposes its methods to the supplied AsyncAction function.
-export interface DispatchAsync<T> extends Function {
-  (action: AsyncAction<T>): PromiseLike<T>;
-}
+export type DispatchAsync<T> = (action: AsyncAction<T>) => PromiseLike<T>;
 
-export interface MakeAsyncAction<T, F>{
-  (x: F): AsyncAction<T>;
-}
+export type MakeAsyncAction<T, F> = (x: F) => AsyncAction<T>;
 
-export interface DispatchAsync2<T> extends Function {
-  <F>(store: Store<T>, ...rest: any[]): PromiseLike<T>
-}
+export type DispatchAsync2<T> = <F>(store: Store<T>, ...rest: any[]) => PromiseLike<T>;
 
 // A function of the Store that gets the current state of the store.
-export interface GetState<T> extends Function {
-  (): T;
-}
+export type GetState<T> = () => T;
 
 // A function of the Store that allows a consumer to subscribe to the next state.
 // This is a wrapper of the Rxjs subscribe method.
-export interface Subscribe<T> extends Function {
-  (observerOrNext: PartialObserver<T> | ((value: T) => void),
-   error?: (error: Error) => void,
-   complete?: () => void): Subscription;
-}
+export type Subscribe<T> = (observerOrNext: PartialObserver<T> | ((value: T) => void), error?: (error: Error) => void,
+  complete?: () => void) => Subscription;
 
 // The store is an object of functions that can dispatch actions and async action, get the current state, and allows a
 // consumer to subscribe and be notified when state changes.
@@ -113,8 +94,8 @@ export function createStore<T>(reducer: Reducer<T>): Store<T> {
   // reduces it to the next state by calling the top level reducer passed into the createStore function.
   function stateFunction(initialState: T, reducer: Reducer<T>): Observable<T> {
     return dispatcher
-      .scan((state: T, action: Action) => currentState = reducer(state, action), initialState)
-      .share(); // Creates a "hot" stream that multi-casts the original stream to all subscribers.
+      .pipe(scan((state: T, action: Action) => currentState = reducer(state, action), initialState))
+      .pipe(share()); // Creates a "hot" stream that multi-casts the original stream to all subscribers.
   }
 
   function getState(): T {
