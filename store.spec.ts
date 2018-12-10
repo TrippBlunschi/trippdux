@@ -6,13 +6,13 @@ chai.should();
 // Test action creator
 export let increment = () => ({type: 'INCREMENT'});
 
-function asyncAction() : AsyncAction<number> {
-  return async function asyncAction({dispatch, getState}): Promise<void> {
-    return new Promise<void>(resolve => {
+function asyncAction() : AsyncAction<number, number> {
+  return async function asyncAction({dispatch, getState}): Promise<number> {
+    return new Promise<number>(resolve => {
        setTimeout(() => {
         let state = getState();
         dispatch(increment());
-         resolve();
+         resolve(1);
       }, 1000)
     })
   }
