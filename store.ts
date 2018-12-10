@@ -27,16 +27,16 @@ export type PayloadMetaAction<P, M> = PayloadAction<P> & MetaAction<M>;
 
 // A function that is dispatched by the store's dispatchAsync method, and provides the store's methods to allow for
 // asynchronous code to execute, to get the current state, or to dispatch actions once asynchronous code returns.
-export type AsyncAction<T> = (store: Store<T>) => PromiseLike<any>;
+export type AsyncAction<T> = (store: Store<T>) => PromiseLike<void>;
 
 // A type guard to check if an object is a PayloadAction type.
 export function isPayloadAction<P>(type: any): type is PayloadAction<P> {
-  return (<PayloadAction<P>> type).payload !== undefined;
+  return (<PayloadAction<P>> type).payload != undefined;
 }
 
 // A type guard to check if an object is a MetaAction type.
 export function isMetaAction<M>(type: any): type is MetaAction<M> {
-  return (<MetaAction<M>> type).meta !== undefined;
+  return (<MetaAction<M>> type).meta != undefined;
 }
 
 // A function that takes the current state and and action that "reduces" the state to the next state.
@@ -48,7 +48,7 @@ export type Reducer<S> =
 export type Dispatch = (action: Action) => void;
 
 // A function of the Store that exposes its methods to the supplied AsyncAction function.
-export type DispatchAsync<T> = (action: AsyncAction<T>) => PromiseLike<T>;
+export type DispatchAsync<T> = (action: AsyncAction<T>) => PromiseLike<void>;
 
 export type MakeAsyncAction<T, F> = (x: F) => AsyncAction<T>;
 
@@ -71,7 +71,9 @@ export interface Store<T> {
   dispatchAsync: DispatchAsync<T>;
 }
 
-// Creates the store by accepting a top level reducer that will handle and delegate all actions to sub reducers.
+ /**
+  * Creates the store by accepting a top level reducer.
+  */
 export function createStore<T>(reducer: Reducer<T>): Store<T> {
 
   // call the reducer without state to trigger an initial state.
@@ -113,7 +115,7 @@ export function createStore<T>(reducer: Reducer<T>): Store<T> {
     dispatcher.next(action);
   }
 
-  function dispatchAsync(asyncAction: AsyncAction<T>): PromiseLike<T> {
+  function dispatchAsync(asyncAction: AsyncAction<T>): PromiseLike<void> {
     logger.debug(`AsyncAction => ${asyncAction.name}`);
     return asyncAction({getState, subscribe, dispatch, dispatchAsync});
   }

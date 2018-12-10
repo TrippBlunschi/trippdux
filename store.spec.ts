@@ -7,9 +7,10 @@ chai.should();
 export let increment = () => ({type: 'INCREMENT'});
 
 function asyncAction() : AsyncAction<number> {
-  return async function asyncAction({dispatch}): Promise<void> {
+  return async function asyncAction({dispatch, getState}): Promise<void> {
     return new Promise<void>(resolve => {
        setTimeout(() => {
+        let state = getState();
         dispatch(increment());
          resolve();
       }, 1000)
