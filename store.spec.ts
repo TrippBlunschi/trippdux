@@ -19,12 +19,13 @@ function asyncAction() : AsyncAction<number> {
 }
 
 // Test reducer
-function incrementReducer(state = 0, action: Action): number {
+function incrementReducer(state = 0, action: Action, context: any): number {
+  context.a = 1;
   if (action.type === 'INCREMENT') {
     return state + 1;
   }
   return state;
-}
+};
 
 describe('Store', () => {
 

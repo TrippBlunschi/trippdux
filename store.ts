@@ -41,8 +41,8 @@ export function isMetaAction<M>(type: any): type is MetaAction<M> {
 
 // A function that takes the current state and and action that "reduces" the state to the next state.
 // A readonly context (state object) is passed along that holds all state for sub reducers.
-export type Reducer<S> =
-  <P, M, C>(state: Readonly<S>, action?: Action | PayloadAction<P> | MetaAction<M>, context?: C) => S;
+export type Reducer<S, C> =
+  <P, M>(state: Readonly<S>, action: Action, context?: Readonly<C>) => S;
 
 // A function of the Store that dispatches a synchronous action for handling by a reducer.
 export type Dispatch = (action: Action) => void;
@@ -70,7 +70,7 @@ export interface Store<T> {
  /**
   * Creates the store by accepting a top level reducer.
   */
-export function createStore<T>(reducer: Reducer<T>): Store<T> {
+export function createStore<T, C>(reducer: Reducer<T, C>): Store<T> {
 
   // call the reducer without state to trigger an initial state.
   let currentState: Readonly<T> = reducer(undefined, {type: ''});
@@ -90,7 +90,7 @@ export function createStore<T>(reducer: Reducer<T>): Store<T> {
 
   // The state function keeps the current state in the scan method, which, when an action is dispatched,
   // reduces it to the next state by calling the top level reducer passed into the createStore function.
-  function stateFunction(initialState: T, reducer: Reducer<T>): Observable<T> {
+  function stateFunction(initialState: T, reducer: Reducer<T, C>): Observable<T> {
     return dispatcher
       .pipe(scan((state: T, action: Action) => currentState = reducer(state, action), initialState))
       .pipe(share()); // Creates a "hot" stream that multi-casts the original stream to all subscribers.
