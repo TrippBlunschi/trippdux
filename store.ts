@@ -27,7 +27,7 @@ export type PayloadMetaAction<P, M> = PayloadAction<P> & MetaAction<M>;
 
 // A function that is dispatched by the store's dispatchAsync method, and provides the store's methods to allow for
 // asynchronous code to execute, to get the current state, or to dispatch actions once asynchronous code returns.
-export type AsyncAction<T, P> = (store: Store<T>) => PromiseLike<P>;
+export type AsyncAction<T, R = void> = (store: Store<T>) => PromiseLike<R>;
 
 // A type guard to check if an object is a PayloadAction type.
 export function isPayloadAction<P>(type: any): type is PayloadAction<P> {
@@ -48,11 +48,7 @@ export type Reducer<S> =
 export type Dispatch = (action: Action) => void;
 
 // A function of the Store that exposes its methods to the supplied AsyncAction function.
-export type DispatchAsync<T> = <P>(action: AsyncAction<T, P>) => PromiseLike<P>;
-
-//export type MakeAsyncAction<T, F> = (x: F) => AsyncAction<T>;
-
-export type DispatchAsync2<T> = <F>(store: Store<T>, ...rest: any[]) => PromiseLike<T>;
+export type DispatchAsync<T> = <R = void>(action: AsyncAction<T, R>) => PromiseLike<R>;
 
 // A function of the Store that gets the current state of the store.
 export type GetState<T> = () => T;
@@ -115,7 +111,7 @@ export function createStore<T>(reducer: Reducer<T>): Store<T> {
     dispatcher.next(action);
   }
 
-  function dispatchAsync<P>(asyncAction: AsyncAction<T, P>): PromiseLike<P> {
+  function dispatchAsync<R>(asyncAction: AsyncAction<T, R>): PromiseLike<R> {
     logger.debug(`AsyncAction => ${asyncAction.name}`);
     return asyncAction({getState, subscribe, dispatch, dispatchAsync});
   }
