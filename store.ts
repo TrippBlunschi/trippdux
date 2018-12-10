@@ -42,7 +42,7 @@ export function isMetaAction<M>(type: any): type is MetaAction<M> {
 // A function that takes the current state and and action that "reduces" the state to the next state.
 // A readonly context (state object) is passed along that holds all state for sub reducers.
 export type Reducer<S> =
-  <P, M>(state: Readonly<S>, action?: Action | PayloadAction<P> | MetaAction<M>, context?: any) => S;
+  <P, M, C>(state: Readonly<S>, action?: Action | PayloadAction<P> | MetaAction<M>, context?: C) => S;
 
 // A function of the Store that dispatches a synchronous action for handling by a reducer.
 export type Dispatch = (action: Action) => void;
