@@ -6,31 +6,30 @@ chai.should();
 // Test action creator
 export let increment = () => ({type: 'INCREMENT'});
 
-function asyncAction() : AsyncAction<number> {
-  return async function asyncAction({dispatch, getState}): Promise<void> {
-    return new Promise<void>(resolve => {
+function asyncAction(): AsyncAction<number> {
+  return async function asyncAction({dispatch}: Store<number>): Promise<void> {
+    return new Promise<void>(resolve =>
        setTimeout(() => {
-        let state = getState();
         dispatch(increment());
-         resolve();
-      }, 1000)
-    })
-  }
+        resolve();
+      }),
+    );
+  };
 }
 
 // Test reducer
-function incrementReducer(state = 0, action: Action, context: any): number {
+function incrementReducer(state: number, action: Action, context: any): number {
 
   if (action.type === 'INCREMENT') {
     return state + 1;
   }
   return state;
-};
+}
 
 describe('Store', () => {
 
   let store: Store<number>;
-  beforeEach(() => store = createStore(incrementReducer));
+  beforeEach(() => store = createStore(incrementReducer, 0));
 
   describe('#createStore', () => {
 
@@ -51,6 +50,22 @@ describe('Store', () => {
         store.dispatch(increment());
         store.subscribe(state => state.should.equal(1));
       });
+
+      it('should receive state when subscribed', () => {
+        let data = 0;
+        store.subscribe(state => data = state);
+        store.dispatch(increment());
+        data.should.equal(1);
+      });
+
+      it('should not receive state when unsubscribed', () => {
+        let data = 0;
+        let subscription = store.subscribe(state => data = state);
+        store.dispatch(increment());
+        subscription.unsubscribe();
+        store.dispatch(increment());
+        data.should.equal(1);
+      });
     });
 
     describe('#getState', () => {
@@ -63,10 +78,16 @@ describe('Store', () => {
         store.dispatch(increment());
         store.getState().should.equal(1);
       });
+      it('Should dispatch twice', () => {
+        store.subscribe(() => undefined);
+        store.dispatch(increment());
+        store.dispatch(increment());
+        store.getState().should.equal(2);
+      });
     });
 
     describe('#dispatchAsync', () => {
-      it('Should dispatch', async () => {
+      it('Should dispatch', async() => {
         store.subscribe(() => undefined);
         await store.dispatchAsync(asyncAction());
         return store.getState().should.equal(1);

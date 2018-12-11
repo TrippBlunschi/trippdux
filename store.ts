@@ -53,10 +53,12 @@ export type DispatchAsync<T> = <R = void>(action: AsyncAction<T, R>) => PromiseL
 // A function of the Store that gets the current state of the store.
 export type GetState<T> = () => T;
 
-// A function of the Store that allows a consumer to subscribe to the next state.
-// This is a wrapper of the Rxjs subscribe method.
-export type Subscribe<T> = (observerOrNext: PartialObserver<T> | ((value: T) => void), error?: (error: Error) => void,
-  complete?: () => void) => Subscription;
+/**
+ * A function of the Store that allows a consumer to subscribe to the next state.
+ * This is a wrapper of the Rxjs subscribe method.
+ */
+export type Subscribe<T> = (next: ((state: T) => void), error?: (error: Error) => void,
+                            complete?: () => void) => Subscription;
 
 // The store is an object of functions that can dispatch actions and async action, get the current state, and allows a
 // consumer to subscribe and be notified when state changes.
@@ -68,12 +70,12 @@ export interface Store<T> {
 }
 
  /**
-  * Creates the store by accepting a top level reducer.
+  * Creates the store by accepting a top level reducer, and some initial state.
   */
-export function createStore<T, C>(reducer: Reducer<T, C>): Store<T> {
+export function createStore<T, C>(reducer: Reducer<T, C>, initialState: T): Store<T> {
 
   // call the reducer without state to trigger an initial state.
-  let currentState: Readonly<T> = reducer(undefined, {type: ''});
+  let currentState: Readonly<T> = reducer(initialState, {type: ''});
 
   // The one and only dispatcher object that dispatches Actions.
   const dispatcher = new Subject<Action>();
@@ -100,10 +102,8 @@ export function createStore<T, C>(reducer: Reducer<T, C>): Store<T> {
     return currentState;
   }
 
-  function subscribe(observerOrNext: ((value: T) => void),
-                     error?: (error: Error) => void,
-                     complete?: () => void): Subscription {
-    return state$.subscribe(observerOrNext, error, complete);
+  function subscribe(next: ((state: T) => void), error?: (error: Error) => void, complete?: () => void): Subscription {
+    return state$.subscribe(next, error, complete);
   }
 
   function dispatch(action: Action): void {
