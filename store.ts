@@ -1,10 +1,6 @@
 import {Subscription, Subject, PartialObserver, Observable} from 'rxjs';
 import {scan, share} from 'rxjs/operators';
 
-import {getLogger} from 'loglevel';
-
-const logger = getLogger('Store');
-
 // An action is dispatched by the store's dispatch function and represents interaction and new
 // information from the user. Reducers are passed actions to update state.
 export interface Action {
@@ -69,10 +65,12 @@ export interface Store<T> {
   dispatchAsync: DispatchAsync<T>;
 }
 
+export type Logger = (type: string, name: string) => void;
+
  /**
   * Creates the store by accepting a top level reducer, and some initial state.
   */
-export function createStore<T, C>(reducer: Reducer<T, C>, initialState: T): Store<T> {
+export function createStore<T, C>(reducer: Reducer<T, C>, initialState: T, logger?: Logger): Store<T> {
 
   // call the reducer without state to trigger an initial state.
   let currentState: Readonly<T> = reducer(initialState, {type: ''});
@@ -107,12 +105,16 @@ export function createStore<T, C>(reducer: Reducer<T, C>, initialState: T): Stor
   }
 
   function dispatch(action: Action): void {
-    logger.debug(`Action => ${action.type}`);
+    if (logger) {
+      logger('action', action.type);
+    }
     dispatcher.next(action);
   }
 
   function dispatchAsync<R>(asyncAction: AsyncAction<T, R>): PromiseLike<R> {
-    logger.debug(`AsyncAction => ${asyncAction.name}`);
+    if (logger) {
+      logger(`AsyncAction`, asyncAction.name);
+    }
     return asyncAction({getState, subscribe, dispatch, dispatchAsync});
   }
 
