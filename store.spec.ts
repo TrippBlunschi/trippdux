@@ -1,4 +1,4 @@
-import {createStore, Store, Action, AsyncAction} from './store';
+import {createStore, Store, Action, AsyncAction} from '.';
 import * as chai from 'chai';
 
 chai.should();
